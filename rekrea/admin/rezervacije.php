@@ -1,0 +1,7 @@
+<?php $title='Rezervacije'; require_once '../includes/functions.php'; require_admin();
+if($_SERVER['REQUEST_METHOD']==='POST'){ check_csrf(); $st=$_POST['status']; if(in_array($st,['potrjena','zavrnjena'])) db()->prepare('UPDATE rezervacije SET status=? WHERE id=?')->execute([$st,(int)$_POST['id']]); flash('Status posodobljen.'); redirect('admin/rezervacije.php'); }
+include '_nav.php'; $r=db()->query('SELECT r.*,o.naziv,CONCAT(u.ime," ",u.priimek) up FROM rezervacije r JOIN sportni_objekti o ON o.id=r.objekt_id JOIN uporabniki u ON u.id=r.uporabnik_id ORDER BY r.datum DESC,r.ura_zacetka')->fetchAll(); ?>
+<h1>Vse rezervacije</h1><div class="tw"><table><tr><th>Uporabnik</th><th>Objekt</th><th>Datum</th><th>Ura</th><th>Status</th><th></th></tr>
+<?php foreach($r as $x): ?><tr><td><?=e($x['up'])?></td><td><?=e($x['naziv'])?></td><td><?=date('d.m.Y',strtotime($x['datum']))?></td><td><?=substr($x['ura_zacetka'],0,5).'–'.substr($x['ura_konca'],0,5)?></td><td><span class="st <?=$x['status']?>"><?=$x['status']?></span></td>
+<td><?php if($x['status']==='cakajoca'): foreach(['potrjena'=>'Potrdi','zavrnjena'=>'Zavrni'] as $k=>$l): ?><form method="post"><?=csrf()?><input type="hidden" name="id" value="<?=$x['id']?>"><input type="hidden" name="status" value="<?=$k?>"><button class="<?=$k==='zavrnjena'?'red':''?>"><?=$l?></button></form> <?php endforeach; endif; ?></td></tr><?php endforeach; ?></table></div>
+<?php include '../includes/footer.php'; ?>
